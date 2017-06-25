@@ -13,8 +13,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.ArrayList;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -31,6 +34,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         CheckUserPermsions();
+        LoadPockemon();
     }
 
 
@@ -88,8 +92,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         if (LocationLisener.location != null) {
                             // Add a marker in Sydney and move the camera
                             LatLng sydney = new LatLng(LocationLisener.location.getLatitude(), LocationLisener.location.getLongitude());
-                            mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+                            mMap.addMarker(new MarkerOptions().position(sydney).title("Player Location").icon(
+                                    BitmapDescriptorFactory.fromResource(R.drawable.player)
+                            ));
                             mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+                            for (int i = 0; i < pockemons.size(); i++) {
+
+                                Pockemon pockemon = pockemons.get(i);
+
+                                LatLng pockemonLocation = new LatLng(pockemon.location.getLatitude(), pockemon.location.getLongitude());
+                                mMap.addMarker(new MarkerOptions().position(pockemonLocation)
+                                        .title(pockemon.name)
+                                        .snippet(pockemon.des + "Power : " + pockemon.power)
+                                        .icon(
+                                                BitmapDescriptorFactory.fromResource(pockemon.Image)
+                                        ));
+
+
+                            }
                         }
 
                     }
@@ -103,6 +124,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         }
+
+    }
+
+    ArrayList<Pockemon> pockemons = new ArrayList<>();
+
+    void LoadPockemon() {
+
+        pockemons.add(new Pockemon(R.drawable.bullbasaur, "bullbasaur", "This is a bullbasaur", 40, 33.33, 44.44));
+        pockemons.add(new Pockemon(R.drawable.jigglypuff, "jigglypuff", "This is a jigglypuff", 60, 34.33, 40.44));
+        pockemons.add(new Pockemon(R.drawable.pikachu, "pikachu", "This is a pikachu", 100, 43.33, 74.44));
     }
 
 
