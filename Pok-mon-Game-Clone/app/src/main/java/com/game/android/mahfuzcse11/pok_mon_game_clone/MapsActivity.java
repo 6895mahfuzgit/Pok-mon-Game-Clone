@@ -1,6 +1,7 @@
 package com.game.android.mahfuzcse11.pok_mon_game_clone;
 
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
@@ -76,48 +77,77 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    Location oldLocation;
+
     class MyThread extends Thread {
+
+
+        public MyThread() {
+
+
+            oldLocation = new Location("Start");
+            oldLocation.setLongitude(0);
+            oldLocation.setLatitude(0);
+        }
+
 
         public void run() {
 
 
             while (true) {
 
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        mMap.clear();
-                        if (LocationLisener.location != null) {
-                            // Add a marker in Sydney and move the camera
-                            LatLng sydney = new LatLng(LocationLisener.location.getLatitude(), LocationLisener.location.getLongitude());
-                            mMap.addMarker(new MarkerOptions().position(sydney).title("Player Location").icon(
-                                    BitmapDescriptorFactory.fromResource(R.drawable.player)
-                            ));
-                            mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
-                            for (int i = 0; i < pockemons.size(); i++) {
-
-                                Pockemon pockemon = pockemons.get(i);
-
-                                LatLng pockemonLocation = new LatLng(pockemon.location.getLatitude(), pockemon.location.getLongitude());
-                                mMap.addMarker(new MarkerOptions().position(pockemonLocation)
-                                        .title(pockemon.name)
-                                        .snippet(pockemon.des + "Power : " + pockemon.power)
-                                        .icon(
-                                                BitmapDescriptorFactory.fromResource(pockemon.Image)
-                                        ));
-
-
-                            }
-                        }
-
-                    }
-                });
-
                 try {
                     Thread.sleep(1000);
+                    if (oldLocation.distanceTo(LocationLisener.location) == 0) {
+                        continue;
+                    }
+
+                    oldLocation = LocationLisener.location;
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            mMap.clear();
+                            if (LocationLisener.location != null) {
+                                // Add a marker in Sydney and move the camera
+                                LatLng sydney = new LatLng(LocationLisener.location.getLatitude(), LocationLisener.location.getLongitude());
+                                mMap.addMarker(new MarkerOptions().position(sydney).title("Player Location").icon(
+                                        BitmapDescriptorFactory.fromResource(R.drawable.player)
+                                ));
+                                mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+                                for (int i = 0; i < pockemons.size(); i++) {
+
+                                    Pockemon pockemon = pockemons.get(i);
+                                    if (pockemon.isCatch == false) {
+
+
+                                        LatLng pockemonLocation = new LatLng(pockemon.location.getLatitude(), pockemon.location.getLongitude());
+                                        mMap.addMarker(new MarkerOptions().position(pockemonLocation)
+                                                .title(pockemon.name)
+                                                .snippet(pockemon.des + "Power : " + pockemon.power)
+                                                .icon(
+                                                        BitmapDescriptorFactory.fromResource(pockemon.Image)
+                                                ));
+
+                                        if (LocationLisener.location.distanceTo(pockemon.location) < 2) {
+                                            myPockemonPower += pockemon.power;
+                                            pockemon.isCatch = true;
+                                            pockemons.remove(pockemon);
+
+
+                                        }
+                                    }
+
+
+                                }
+                            }
+
+                        }
+                    });
+
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -127,9 +157,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    double myPockemonPower = 0;
     ArrayList<Pockemon> pockemons = new ArrayList<>();
 
     void LoadPockemon() {
+
+
 
         pockemons.add(new Pockemon(R.drawable.bullbasaur, "bullbasaur", "This is a bullbasaur", 40, 33.33, 44.44));
         pockemons.add(new Pockemon(R.drawable.jigglypuff, "jigglypuff", "This is a jigglypuff", 60, 34.33, 40.44));
