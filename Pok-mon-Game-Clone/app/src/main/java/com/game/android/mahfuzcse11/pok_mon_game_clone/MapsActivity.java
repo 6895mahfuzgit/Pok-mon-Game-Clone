@@ -1,7 +1,13 @@
 package com.game.android.mahfuzcse11.pok_mon_game_clone;
 
-import android.support.v4.app.FragmentActivity;
+import android.content.pm.PackageManager;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentActivity;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -22,6 +28,92 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
+        CheckUserPermsions();
+    }
+
+
+    //access to permsions
+    void CheckUserPermsions() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{
+                                android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        REQUEST_CODE_ASK_PERMISSIONS);
+                return;
+            }
+        }
+
+        runLocationLisener(); //getLastLocation();// init the contact list
+
+    }
+
+    //get acces to location permsion
+    final private int REQUEST_CODE_ASK_PERMISSIONS = 123;
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CODE_ASK_PERMISSIONS:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    runLocationLisener(); //  getLastLocation();// init the contact list
+                } else {
+                    // Permission Denied
+                    Toast.makeText(this, "Access Denailed???", Toast.LENGTH_SHORT)
+                            .show();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+
+    class MyThread extends Thread {
+
+        public void run() {
+
+
+            while (true) {
+
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        mMap.clear();
+                        if (LocationLisener.location != null) {
+                            // Add a marker in Sydney and move the camera
+                            LatLng sydney = new LatLng(LocationLisener.location.getLatitude(), LocationLisener.location.getLongitude());
+                            mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+                            mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+                        }
+
+                    }
+                });
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+    }
+
+
+    void runLocationLisener() {
+
+        LocationListener locationListener = new LocationLisener();
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 3, 5, locationListener);
+
+        MyThread myThread = new MyThread();
+        myThread.start();
     }
 
 
@@ -38,9 +130,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 }
